@@ -1,0 +1,74 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    margin-bottom: 20px;
+    display: flex;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+button {
+    padding: 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.btn-complete {
+    color: blue;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+.btn-delete {
+    color: red;
+    text-decoration: none;
+}
+
+.stats-box {
+    margin-top: 20px;
+}
+
+.btn-stat {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.total { background-color: gray; }      
+.pending { background-color: orange; }  
+.completed { background-color: green; } 
