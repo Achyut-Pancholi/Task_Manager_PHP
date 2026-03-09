@@ -1,35 +1,45 @@
 <?php 
-include 'db_connect.php'; 
+session_start(); // Start session to track the user
+require 'db_connect.php'; 
 
-// 1. ADD TASK
+// 1. AUTH CHECK: Redirect to login if user is not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$user_id = $_SESSION['user_id']; // Store current user ID
+
+// 2. ADD TASK (Linked to user_id)
 if (isset($_POST['add_task'])) {
     $task = $_POST['task_name'];
     if (!empty($task)) {
-        // Professional tip: use mysqli_real_escape_string to prevent SQL errors with apostrophes
         $task = mysqli_real_escape_string($conn, $task);
-        mysqli_query($conn, "INSERT INTO tasks (task_name) VALUES ('$task')");
-        header("Location: index.php"); // Prevents re-submission on refresh
+        // Include user_id in the insert query
+        mysqli_query($conn, "INSERT INTO tasks (task_name, user_id) VALUES ('$task', '$user_id')");
+        header("Location: index.php");
         exit();
     }
 }
 
-// 2. DELETE TASK
+// 3. DELETE TASK (Filter by user_id for security)
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    mysqli_query($conn, "DELETE FROM tasks WHERE id=$id");
+    mysqli_query($conn, "DELETE FROM tasks WHERE id=$id AND user_id=$user_id");
     header("Location: index.php");
     exit();
 }
 
-// 3. MARK AS COMPLETED
+// 4. MARK AS COMPLETED (Filter by user_id)
 if (isset($_GET['complete'])) {
     $id = (int)$_GET['complete'];
-    mysqli_query($conn, "UPDATE tasks SET status='Completed' WHERE id=$id");
+    mysqli_query($conn, "UPDATE tasks SET status='Completed' WHERE id=$id AND user_id=$user_id");
     header("Location: index.php");
     exit();
 }
 
-$result = mysqli_query($conn, "SELECT * FROM tasks ORDER BY created_at DESC");
+// 5. FETCH TASKS: Only for the logged-in user
+$result = mysqli_query($conn, "SELECT * FROM tasks WHERE user_id=$user_id ORDER BY created_at DESC");
 ?>
 
 <!DOCTYPE html>
@@ -42,9 +52,12 @@ $result = mysqli_query($conn, "SELECT * FROM tasks ORDER BY created_at DESC");
 </head>
 <body>
     <div class="container shadow-lg">
-        <header>
-            <h2>Task Management System</h2>
-            <p class="subtitle">Efficiently track your daily goals</p>
+        <header style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></h2>
+                <p class="subtitle">Your personal task dashboard</p>
+            </div>
+            <a href="logout.php" style="color: #e74c3c; text-decoration: none; font-weight: bold;">Logout</a>
         </header>
         
         <form method="POST" action="index.php" class="task-form">
@@ -63,7 +76,6 @@ $result = mysqli_query($conn, "SELECT * FROM tasks ORDER BY created_at DESC");
             </thead>
             <tbody>
                 <?php while($row = mysqli_fetch_assoc($result)) { 
-                    // Formatting the timestamp for a professional look
                     $timestamp = date("d M, h:i A", strtotime($row['created_at']));
                     $status_class = strtolower($row['status']);
                 ?>
@@ -92,8 +104,9 @@ $result = mysqli_query($conn, "SELECT * FROM tasks ORDER BY created_at DESC");
             </div>
             
             <?php 
-                $pending_count = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM tasks WHERE status='Pending'"));
-                $completed_count = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM tasks WHERE status='Completed'"));
+                // Updated stats queries to count only the current user's tasks
+                $pending_count = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM tasks WHERE status='Pending' AND user_id=$user_id"));
+                $completed_count = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM tasks WHERE status='Completed' AND user_id=$user_id"));
             ?>
 
             <div class="stat-item pending">
